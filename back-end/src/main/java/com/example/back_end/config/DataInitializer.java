@@ -19,15 +19,25 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (usuarioRepository.findByEmail("AlvaroTeste@gmail.com").isEmpty()) {
-            UsuarioEntity admin = new UsuarioEntity();
-            admin.setNome("Alvaro Admin");
-            admin.setEmail("AlvaroTeste@gmail.com");
-            admin.setSenha(passwordEncoder.encode("12345678")); // Senha criptografada
-            admin.setRole(UserRole.TECNICO_N1);
+        criarUsuarioSeNaoExiste("Alvaro", "AlvaroTeste@gmail.com", "12345678", UserRole.SOLICITANTE);
+        criarUsuarioSeNaoExiste("Alvaro1", "AlvaroTeste1@gmail.com", "12345678", UserRole.TECNICO_N1);
+        criarUsuarioSeNaoExiste("Alvaro2", "AlvaroTeste2@gmail.com", "12345678", UserRole.TECNICO_N2);
+        criarUsuarioSeNaoExiste("Alvaro3", "AlvaroTeste3@gmail.com", "12345678", UserRole.TECNICO_N3);
+        criarUsuarioSeNaoExiste("Danilo", "DaniloTeste@gmail.com", "12345678", UserRole.TECNICO_N3);
+        criarUsuarioSeNaoExiste("Gabrielle", "GabrielleTeste@gmail.com", "12345678", UserRole.TECNICO_N2);
+        criarUsuarioSeNaoExiste("Stephanie", "StephanieTeste@gmail.com", "12345678", UserRole.TECNICO_N1);
+    }
 
-            usuarioRepository.save(admin);
-            System.out.println("✅ Usuário inicial criado com sucesso: AlvaroTeste@gmail.com");
+    private void criarUsuarioSeNaoExiste(String nome, String email, String senhaBruta, UserRole role) {
+        if (usuarioRepository.findByEmail(email).isEmpty()) {
+            UsuarioEntity usuario = new UsuarioEntity();
+            usuario.setNome(nome);
+            usuario.setEmail(email);
+            usuario.setSenha(passwordEncoder.encode(senhaBruta)); // Senha criptografada
+            usuario.setRole(role);
+
+            usuarioRepository.save(usuario);
+            System.out.println("✅ Usuário inicial criado com sucesso: " + email + " (" + role + ")");
         }
     }
 }
