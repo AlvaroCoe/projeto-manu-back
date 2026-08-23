@@ -47,4 +47,10 @@ public class UsuarioService {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado. Id: " + id));
     }
+
+    // Usado pra descobrir quem está logado a partir do token (email vem do JWT)
+    public UsuarioEntity findEntityByEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado: " + email));
+    }
 }

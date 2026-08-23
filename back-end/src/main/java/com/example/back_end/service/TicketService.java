@@ -1,15 +1,14 @@
 package com.example.back_end.service;
 
-import com.example.back_end.dto.TicketCreateDTO;
-import com.example.back_end.dto.TicketEscalateDTO;
-import com.example.back_end.dto.TicketResponseDTO;
-import com.example.back_end.dto.TicketStatusUpdateDTO;
+import com.example.back_end.dto.*;
+import com.example.back_end.entity.ComentarioEntity;
 import com.example.back_end.entity.EquipamentoEntity;
 import com.example.back_end.entity.TicketEntity;
 import com.example.back_end.entity.UsuarioEntity;
 import com.example.back_end.enums.SupportLevel;
 import com.example.back_end.enums.TicketStatus;
 import com.example.back_end.exception.ResourceNotFoundException;
+import com.example.back_end.repository.ComentarioRepository;
 import com.example.back_end.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +26,9 @@ public class TicketService {
 
     @Autowired
     private EquipamentoService equipamentoService;
+
+    @Autowired
+    private ComentarioRepository comentarioRepository;
 
     public TicketResponseDTO create(TicketCreateDTO dto) {
         UsuarioEntity client = usuarioService.findEntityById(dto.clientId());
@@ -83,6 +85,36 @@ public class TicketService {
         }
 
         entity = ticketRepository.save(entity);
+        return new TicketResponseDTO(entity);
+    }
+
+    // Técnico "assume" o chamado pra si. Se ainda estiver ABERTO, já passa pra ANDAMENTO.
+    public TicketResponseDTO pegar(Long id, String emailTecnico) {
+        TicketEntity entity = findEntityById(id);
+        UsuarioEntity tecnico = usuarioService.findEntityByEmail(emailTecnico);
+
+        entity.setTechnician(tecnico);
+        if (entity.getStatus() == TicketStatus.ABERTO) {
+            entity.setStatus(TicketStatus.ANDAMENTO);
+        }
+
+        entity = ticketRepository.save(entity);
+        return new TicketResponseDTO(entity);
+    }
+
+    // Cancela o chamado e já registra o motivo como um comentário no histórico
+    public TicketResponseDTO cancelar(Long id, TicketCancelDTO dto, String emailAutor) {
+        TicketEntity entity = findEntityById(id);
+        entity.setStatus(TicketStatus.CANCELADO);
+        entity = ticketRepository.save(entity);
+
+        UsuarioEntity autor = usuarioService.findEntityByEmail(emailAutor);
+        ComentarioEntity comentario = new ComentarioEntity();
+        comentario.setMensagem("Chamado cancelado. Motivo: " + dto.motivo());
+        comentario.setTicket(entity);
+        comentario.setAutor(autor);
+        comentarioRepository.save(comentario);
+
         return new TicketResponseDTO(entity);
     }
 
