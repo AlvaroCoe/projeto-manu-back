@@ -12,6 +12,7 @@ import com.example.back_end.repository.ComentarioRepository;
 import com.example.back_end.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.example.back_end.enums.UserRole;
 
 import javax.annotation.processing.SupportedOptions;
 import java.util.List;
@@ -64,8 +65,9 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("Chamado não encontrado. Id: " + id));
     }
 
-    public TicketResponseDTO updateStatus(Long id, TicketStatusUpdateDTO dto) {
+    public TicketResponseDTO updateStatus(Long id, TicketStatusUpdateDTO dto, String emailAutor) {
         TicketEntity entity = findEntityById(id);
+        validarTecnicoPodeAgir(entity, emailAutor);
         entity.setStatus(dto.status());
 
         entity = ticketRepository.save(entity);
@@ -75,6 +77,7 @@ public class TicketService {
     // Regra de negócio principal: N1 -> N2 -> N3. Não é possível escalar além de N3.
     public TicketResponseDTO escalar(Long id, TicketEscalateDTO dto, String emailAutor) {
         TicketEntity entity = findEntityById(id);
+        validarTecnicoPodeAgir(entity, emailAutor);
 
         SupportLevel nivelAnterior = entity.getCurrentLevel();
         SupportLevel proximoNivel = proximoNivel(nivelAnterior);
@@ -89,7 +92,7 @@ public class TicketService {
         entity = ticketRepository.save(entity);
         UsuarioEntity autor = usuarioService.findEntityByEmail(emailAutor);
         ComentarioEntity comentario = new ComentarioEntity();
-        comentario.setMensagem("Chamado escalado de " + nivelAnterior + "para" + proximoNivel + ". Motivo" + dto.motivo());
+        comentario.setMensagem("Chamado escalado de " + nivelAnterior + " para " + proximoNivel + ". Motivo " + dto.motivo());
         comentario.setTicket(entity);
         comentario.setAutor(autor);
         comentarioRepository.save(comentario);
@@ -113,6 +116,7 @@ public class TicketService {
     // Cancela o chamado e já registra o motivo como um comentário no histórico
     public TicketResponseDTO cancelar(Long id, TicketCancelDTO dto, String emailAutor) {
         TicketEntity entity = findEntityById(id);
+        validarTecnicoPodeAgir(entity,emailAutor);
         entity.setStatus(TicketStatus.CANCELADO);
         entity = ticketRepository.save(entity);
 
@@ -124,6 +128,33 @@ public class TicketService {
         comentarioRepository.save(comentario);
 
         return new TicketResponseDTO(entity);
+    }
+//Bloqueia escalar/finalizar/cancelar se o técnico não for do nível atual do chamado nem o responsável por ele
+
+    private void validarTecnicoPodeAgir(TicketEntity entity, String emailAutor){
+        UsuarioEntity tecnico = usuarioService.findEntityByEmail(emailAutor);
+        boolean eOTecnicoResponsavel = entity.getTechnician() != null
+                && entity.getTechnician().getId().equals(tecnico.getId());
+
+        boolean estaNoNivelDoChamado = nivelDoRole(tecnico.getRole()) == entity.getCurrentLevel();
+
+        if (eOTecnicoResponsavel && !estaNoNivelDoChamado){
+            throw  new IllegalStateException(
+                    "Este chamado está no nível " + entity.getCurrentLevel()
+                    + " e só poderá ser alterado por um técnico desse nível ou pelo técnico responsável."
+                    + " Você ainda pode comentar no chamado!"
+            );
+        }
+    }
+
+    private SupportLevel nivelDoRole(UserRole role){
+        return switch (role){
+            case TECNICO_N1 -> SupportLevel.N1;
+            case TECNICO_N2 -> SupportLevel.N2;
+            case TECNICO_N3 -> SupportLevel.N3;
+            case SOLICITANTE -> null;
+        };
+
     }
 
     private SupportLevel proximoNivel(SupportLevel atual) {
