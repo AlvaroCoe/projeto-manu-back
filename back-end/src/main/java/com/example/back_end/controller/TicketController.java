@@ -43,8 +43,9 @@ public class TicketController {
     @PreAuthorize("hasRole('TECNICO_N1')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<TicketResponseDTO> updateStatus(@PathVariable Long id,
-                                                          @Valid @RequestBody TicketStatusUpdateDTO dto) {
-        return ResponseEntity.ok(ticketService.updateStatus(id, dto));
+                                                          @Valid @RequestBody TicketStatusUpdateDTO dto,
+                                                          Authentication authentication) {
+        return ResponseEntity.ok(ticketService.updateStatus(id, dto, authentication.getName()));
     }
 
     @PreAuthorize("hasRole('TECNICO_N1')")
