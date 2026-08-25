@@ -13,6 +13,7 @@ import com.example.back_end.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.processing.SupportedOptions;
 import java.util.List;
 
 @Service
@@ -72,10 +73,11 @@ public class TicketService {
     }
 
     // Regra de negócio principal: N1 -> N2 -> N3. Não é possível escalar além de N3.
-    public TicketResponseDTO escalar(Long id, TicketEscalateDTO dto) {
+    public TicketResponseDTO escalar(Long id, TicketEscalateDTO dto, String emailAutor) {
         TicketEntity entity = findEntityById(id);
 
-        SupportLevel proximoNivel = proximoNivel(entity.getCurrentLevel());
+        SupportLevel nivelAnterior = entity.getCurrentLevel();
+        SupportLevel proximoNivel = proximoNivel(nivelAnterior);
         entity.setCurrentLevel(proximoNivel);
         entity.setStatus(TicketStatus.ANDAMENTO);
 
@@ -85,6 +87,12 @@ public class TicketService {
         }
 
         entity = ticketRepository.save(entity);
+        UsuarioEntity autor = usuarioService.findEntityByEmail(emailAutor);
+        ComentarioEntity comentario = new ComentarioEntity();
+        comentario.setMensagem("Chamado escalado de " + nivelAnterior + "para" + proximoNivel + ". Motivo" + dto.motivo());
+        comentario.setTicket(entity);
+        comentario.setAutor(autor);
+        comentarioRepository.save(comentario);
         return new TicketResponseDTO(entity);
     }
 
