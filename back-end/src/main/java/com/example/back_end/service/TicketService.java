@@ -14,7 +14,6 @@ import com.example.back_end.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -87,6 +86,8 @@ public class TicketService {
         entity.setStatus(TicketStatus.ANDAMENTO);
         entity.setTechnician(null);
 
+        // Volta a "sem responsável" no novo nível — alguém DESSE nível precisa assumir de novo.
+        entity.setTechnician(null);
         if (dto.technicianId() != null) {
             UsuarioEntity tecnico = usuarioService.findEntityById(dto.technicianId());
             entity.setTechnician(tecnico);
@@ -104,6 +105,8 @@ public class TicketService {
         return new TicketResponseDTO(entity);
     }
 
+    // Assumir um chamado agora exige que o nível do técnico bata EXATAMENTE com o nível do chamado.
+    // Um N3 não pode mais "pular a fila" e assumir um chamado que ainda está em N1.
     public TicketResponseDTO pegar(Long id, String emailTecnico) {
         TicketEntity entity = findEntityById(id);
         UsuarioEntity tecnico = usuarioService.findEntityByEmail(emailTecnico);
@@ -142,6 +145,8 @@ public class TicketService {
         return new TicketResponseDTO(entity);
     }
 
+    // Bloqueia status/escalar/cancelar quando a pessoa NÃO é a responsável pelo chamado
+    // E também não é de um técnico do MESMO nível do chamado (comparação exata, sem herança).
     private void validarTecnicoPodeAgir(TicketEntity entity, String emailAutor) {
         UsuarioEntity tecnico = usuarioService.findEntityByEmail(emailAutor);
 
