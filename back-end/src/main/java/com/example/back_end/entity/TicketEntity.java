@@ -28,6 +28,7 @@ public class TicketEntity {
 
     private String imageUrl;
     private LocalDateTime createdAt;
+    private LocalDateTime resolvedAt;
 
     @ManyToOne
     @JoinColumn(name = "client_id")
@@ -62,6 +63,8 @@ public class TicketEntity {
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getResolvedAt() { return resolvedAt; }
+    public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
     public UsuarioEntity getClient() { return client; }
     public void setClient(UsuarioEntity client) { this.client = client; }
     public UsuarioEntity getTechnician() { return technician; }

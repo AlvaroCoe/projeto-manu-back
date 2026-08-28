@@ -4,6 +4,7 @@ import com.example.back_end.entity.TicketEntity;
 import com.example.back_end.enums.Prioridade;
 import com.example.back_end.enums.SupportLevel;
 import com.example.back_end.enums.TicketStatus;
+import com.example.back_end.util.SlaCalculator;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +17,8 @@ public record TicketResponseDTO(
         SupportLevel currentLevel,
         String imageUrl,
         LocalDateTime createdAt,
+        LocalDateTime prazoLimite,
+        boolean atrasado,
         UsuarioResponseDTO client,
         UsuarioResponseDTO technician,
         EquipamentoResponseDTO equipamento
@@ -30,6 +33,8 @@ public record TicketResponseDTO(
                 entity.getCurrentLevel(),
                 entity.getImageUrl(),
                 entity.getCreatedAt(),
+                SlaCalculator.calcularPrazo(entity),
+                SlaCalculator.estaAtrasado(entity),
                 entity.getClient() != null ? new UsuarioResponseDTO(entity.getClient()) : null,
                 entity.getTechnician() != null ? new UsuarioResponseDTO(entity.getTechnician()) : null,
                 entity.getEquipamento() != null ? new EquipamentoResponseDTO(entity.getEquipamento()) : null

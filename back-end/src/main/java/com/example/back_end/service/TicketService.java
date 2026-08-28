@@ -14,6 +14,7 @@ import com.example.back_end.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -68,11 +69,14 @@ public class TicketService {
         validarTecnicoPodeAgir(entity, emailAutor);
         entity.setStatus(dto.status());
 
+        if (dto.status() == TicketStatus.FINALIZADO || dto.status() == TicketStatus.CANCELADO) {
+            entity.setResolvedAt(LocalDateTime.now());
+        }
+
         entity = ticketRepository.save(entity);
         return new TicketResponseDTO(entity);
     }
 
-    // Regra de negócio principal: N1 -> N2 -> N3. Não é possível escalar além de N3.
     public TicketResponseDTO escalar(Long id, TicketEscalateDTO dto, String emailAutor) {
         TicketEntity entity = findEntityById(id);
         validarTecnicoPodeAgir(entity, emailAutor);
@@ -81,9 +85,8 @@ public class TicketService {
         SupportLevel proximoNivel = proximoNivel(nivelAnterior);
         entity.setCurrentLevel(proximoNivel);
         entity.setStatus(TicketStatus.ANDAMENTO);
-
-        // Volta a "sem responsável" no novo nível — alguém DESSE nível precisa assumir de novo.
         entity.setTechnician(null);
+
         if (dto.technicianId() != null) {
             UsuarioEntity tecnico = usuarioService.findEntityById(dto.technicianId());
             entity.setTechnician(tecnico);
@@ -101,8 +104,6 @@ public class TicketService {
         return new TicketResponseDTO(entity);
     }
 
-    // Assumir um chamado agora exige que o nível do técnico bata EXATAMENTE com o nível do chamado.
-    // Um N3 não pode mais "pular a fila" e assumir um chamado que ainda está em N1.
     public TicketResponseDTO pegar(Long id, String emailTecnico) {
         TicketEntity entity = findEntityById(id);
         UsuarioEntity tecnico = usuarioService.findEntityByEmail(emailTecnico);
@@ -128,6 +129,7 @@ public class TicketService {
         TicketEntity entity = findEntityById(id);
         validarTecnicoPodeAgir(entity, emailAutor);
         entity.setStatus(TicketStatus.CANCELADO);
+        entity.setResolvedAt(LocalDateTime.now());
         entity = ticketRepository.save(entity);
 
         UsuarioEntity autor = usuarioService.findEntityByEmail(emailAutor);
@@ -140,8 +142,6 @@ public class TicketService {
         return new TicketResponseDTO(entity);
     }
 
-    // Bloqueia status/escalar/cancelar quando a pessoa NÃO é a responsável pelo chamado
-    // E também não é de um técnico do MESMO nível do chamado (comparação exata, sem herança).
     private void validarTecnicoPodeAgir(TicketEntity entity, String emailAutor) {
         UsuarioEntity tecnico = usuarioService.findEntityByEmail(emailAutor);
 
