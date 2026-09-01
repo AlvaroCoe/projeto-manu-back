@@ -5,6 +5,7 @@ import com.example.back_end.dto.TicketCreateDTO;
 import com.example.back_end.dto.TicketEscalateDTO;
 import com.example.back_end.dto.TicketResponseDTO;
 import com.example.back_end.dto.TicketStatusUpdateDTO;
+import com.example.back_end.enums.SupportLevel;
 import com.example.back_end.service.TicketService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +31,14 @@ public class TicketController {
         return ResponseEntity.created(uri).body(response);
     }
 
+    // GET /api/tickets?clientId=5  -> chamados de um solicitante ("Meus Chamados")
+    // GET /api/tickets?nivel=N1    -> fila de chamados de um nível de suporte
+    // GET /api/tickets             -> todos os chamados
     @GetMapping
-    public ResponseEntity<List<TicketResponseDTO>> findAll() {
-        return ResponseEntity.ok(ticketService.findAll());
+    public ResponseEntity<List<TicketResponseDTO>> findAll(
+            @RequestParam(required = false) Long clientId,
+            @RequestParam(required = false) SupportLevel nivel) {
+        return ResponseEntity.ok(ticketService.findAll(clientId, nivel));
     }
 
     @GetMapping("/{id}")
@@ -53,7 +59,7 @@ public class TicketController {
     public ResponseEntity<TicketResponseDTO> escalar(@PathVariable Long id,
                                                      @Valid @RequestBody TicketEscalateDTO dto,
                                                      Authentication authentication) {
-        return ResponseEntity.ok(ticketService.escalar(id, dto,authentication.getName()));
+        return ResponseEntity.ok(ticketService.escalar(id, dto, authentication.getName()));
     }
 
     @PreAuthorize("hasRole('TECNICO_N1')")
