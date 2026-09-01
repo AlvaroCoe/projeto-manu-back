@@ -14,6 +14,7 @@ import com.example.back_end.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -80,6 +81,10 @@ public class TicketService {
         validarTecnicoPodeAgir(entity, emailAutor);
         entity.setStatus(dto.status());
 
+        if (dto.status() == TicketStatus.FINALIZADO || dto.status() == TicketStatus.CANCELADO) {
+            entity.setResolvedAt(LocalDateTime.now());
+        }
+
         entity = ticketRepository.save(entity);
         return new TicketResponseDTO(entity);
     }
@@ -139,6 +144,7 @@ public class TicketService {
         TicketEntity entity = findEntityById(id);
         validarTecnicoPodeAgir(entity, emailAutor);
         entity.setStatus(TicketStatus.CANCELADO);
+        entity.setResolvedAt(LocalDateTime.now());
         entity = ticketRepository.save(entity);
 
         UsuarioEntity autor = usuarioService.findEntityByEmail(emailAutor);
