@@ -47,9 +47,21 @@ public class TicketService {
         return new TicketResponseDTO(entity);
     }
 
-    public List<TicketResponseDTO> findAll() {
-        return ticketRepository.findAll()
-                .stream()
+    // clientId e nivel são filtros opcionais:
+    // - clientId: usado pelo SOLICITANTE para ver só os próprios chamados ("Meus Chamados")
+    // - nivel: usado pelo TÉCNICO para ver a fila de chamados do seu nível de atendimento
+    public List<TicketResponseDTO> findAll(Long clientId, SupportLevel nivel) {
+        List<TicketEntity> tickets;
+
+        if (clientId != null) {
+            tickets = ticketRepository.findByClientId(clientId);
+        } else if (nivel != null) {
+            tickets = ticketRepository.findByCurrentLevel(nivel);
+        } else {
+            tickets = ticketRepository.findAll();
+        }
+
+        return tickets.stream()
                 .map(TicketResponseDTO::new)
                 .toList();
     }
@@ -101,8 +113,7 @@ public class TicketService {
         return new TicketResponseDTO(entity);
     }
 
-    // Assumir um chamado agora exige que o nível do técnico bata EXATAMENTE com o nível do chamado.
-    // Um N3 não pode mais "pular a fila" e assumir um chamado que ainda está em N1.
+    // Assumir um chamado exige que o nível do técnico bata EXATAMENTE com o nível do chamado.
     public TicketResponseDTO pegar(Long id, String emailTecnico) {
         TicketEntity entity = findEntityById(id);
         UsuarioEntity tecnico = usuarioService.findEntityByEmail(emailTecnico);
@@ -141,7 +152,7 @@ public class TicketService {
     }
 
     // Bloqueia status/escalar/cancelar quando a pessoa NÃO é a responsável pelo chamado
-    // E também não é de um técnico do MESMO nível do chamado (comparação exata, sem herança).
+    // E também não é um técnico do MESMO nível do chamado (comparação exata, sem herança).
     private void validarTecnicoPodeAgir(TicketEntity entity, String emailAutor) {
         UsuarioEntity tecnico = usuarioService.findEntityByEmail(emailAutor);
 
