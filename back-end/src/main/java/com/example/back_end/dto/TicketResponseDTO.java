@@ -16,8 +16,8 @@ public record TicketResponseDTO(
         SupportLevel currentLevel,
         String imageUrl,
         LocalDateTime createdAt,
-        LocalDateTime prazoLimite, // NOVO: prazo calculado a partir da prioridade
-        boolean atrasado,          // NOVO: true se passou do prazo e ainda não foi finalizado
+        LocalDateTime prazoLimite,
+        boolean atrasado,
         UsuarioResponseDTO client,
         UsuarioResponseDTO technician,
         EquipamentoResponseDTO equipamento
@@ -32,25 +32,26 @@ public record TicketResponseDTO(
                 entity.getCurrentLevel(),
                 entity.getImageUrl(),
                 entity.getCreatedAt(),
-                calcularPrazoLimite(entity),   // NOVO
-                calcularAtrasado(entity),      // NOVO
+                calcularPrazoLimite(entity),
+                calcularAtrasado(entity),
                 entity.getClient() != null ? new UsuarioResponseDTO(entity.getClient()) : null,
                 entity.getTechnician() != null ? new UsuarioResponseDTO(entity.getTechnician()) : null,
                 entity.getEquipamento() != null ? new EquipamentoResponseDTO(entity.getEquipamento()) : null
         );
     }
 
-    // Métodos estáticos "auxiliares": um record não pode ter lógica solta dentro do
-    // construtor como uma classe comum, então isolamos o cálculo aqui e só chamamos
-    // eles lá em cima, dentro do this(...).
     private static LocalDateTime calcularPrazoLimite(TicketEntity entity) {
         return entity.getCreatedAt().plusHours(horasPorPrioridade(entity.getPrioridade()));
     }
 
+    // Enquanto o chamado está aberto, compara com "agora" (atraso em tempo real).
+    // Depois de resolvido (FINALIZADO ou CANCELADO), compara com o momento exato
+    // em que foi resolvido — assim um chamado que atrasou continua marcado como
+    // atrasado pra sempre, mesmo depois de fechado.
     private static boolean calcularAtrasado(TicketEntity entity) {
         LocalDateTime prazoLimite = calcularPrazoLimite(entity);
-        return LocalDateTime.now().isAfter(prazoLimite)
-                && entity.getStatus() != TicketStatus.FINALIZADO;
+        LocalDateTime referencia = entity.getResolvedAt() != null ? entity.getResolvedAt() : LocalDateTime.now();
+        return referencia.isAfter(prazoLimite);
     }
 
     private static long horasPorPrioridade(Prioridade prioridade) {
