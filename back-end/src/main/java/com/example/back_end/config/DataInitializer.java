@@ -31,13 +31,16 @@ public class DataInitializer implements CommandLineRunner {
         criarUsuarioSeNaoExiste("Danilo", "DaniloTeste@gmail.com", "12345678", UserRole.TECNICO_N3);
         criarUsuarioSeNaoExiste("Gabrielle", "GabrielleTeste@gmail.com", "12345678", UserRole.TECNICO_N2);
         criarUsuarioSeNaoExiste("Stephanie", "StephanieTeste@gmail.com", "12345678", UserRole.TECNICO_N1);
+        criarUsuarioSeNaoExiste("Ícaro", "IcaroTeste@gmail.com", "12345678", UserRole.TECNICO_N3);
 
         criarEquipamentoSeNaoExiste("Desktop Dell OptiPlex 7010", "PAT-0001", "Recepção");
         criarEquipamentoSeNaoExiste("Desktop Positivo Master D270", "PAT-0002", "TI");
-        criarEquipamentoSeNaoExiste("Notebook Dell Latitude 5440", "PAT-0003", "Financeiro");
-        criarEquipamentoSeNaoExiste("Notebook Lenovo ThinkPad X1 Carbon", "PAT-0004", "Diretoria");
-        criarEquipamentoSeNaoExiste("Notebook Apple MacBook Pro M3", "PAT-0005", "Design");
-        criarEquipamentoSeNaoExiste("iPhone 15 Pro Max (corporativo)", "PAT-0006", "Diretoria");
+        criarEquipamentoSeNaoExiste("Notebook Apple MacBook Pro M3", "PAT-0003", "Design");
+        criarEquipamentoSeNaoExiste("Notebook Dell Latitude 5440", "PAT-0004", "Financeiro");
+        criarEquipamentoSeNaoExiste("Notebook Inspiron 14 2 em 1", "PAT-0005", "Inventário");
+        criarEquipamentoSeNaoExiste("Notebook Lenovo ThinkPad X1 Carbon", "PAT-0006", "Diretoria");
+        criarEquipamentoSeNaoExiste("iPhone 15 Pro Max (corporativo)", "PAT-0007", "Marketing");
+        criarEquipamentoSeNaoExiste("iPhone 17 Pro (corporativo)", "PAT-0008", "Consultor de Vendas");
     }
 
     private void criarUsuarioSeNaoExiste(String nome, String email, String senhaBruta, UserRole role) {
