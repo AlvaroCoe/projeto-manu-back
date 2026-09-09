@@ -29,6 +29,11 @@ public class UsuarioEntity {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
+    // DEFAULT 1 garante que, ao criar essa coluna num banco que já tem usuários,
+    // as linhas existentes recebam "ativo" automaticamente (não ficam NULL).
+    @Column(columnDefinition = "TINYINT(1) DEFAULT 1")
+    private Boolean ativo = true;
+
     public UsuarioEntity() {}
 
     public UsuarioEntity(Long id, String nome, String email, String senha, UserRole role) {
@@ -49,4 +54,6 @@ public class UsuarioEntity {
     public void setSenha(String senha) { this.senha = senha; }
     public UserRole getRole() { return role; }
     public void setRole(UserRole role) { this.role = role; }
+    public Boolean getAtivo() { return ativo; }
+    public void setAtivo(Boolean ativo) { this.ativo = ativo; }
 }

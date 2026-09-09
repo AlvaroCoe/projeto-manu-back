@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface ComentarioRepository extends JpaRepository<ComentarioEntity, Long> {
     List<ComentarioEntity> findByTicketIdOrderByCreatedAtAsc(Long ticketId);
+    boolean existsByAutorId(Long autorId);
 }

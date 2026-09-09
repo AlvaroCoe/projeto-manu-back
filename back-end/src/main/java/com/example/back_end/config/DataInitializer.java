@@ -32,6 +32,8 @@ public class DataInitializer implements CommandLineRunner {
         criarUsuarioSeNaoExiste("Gabrielle", "GabrielleTeste@gmail.com", "12345678", UserRole.TECNICO_N2);
         criarUsuarioSeNaoExiste("Stephanie", "StephanieTeste@gmail.com", "12345678", UserRole.TECNICO_N1);
         criarUsuarioSeNaoExiste("Ícaro", "IcaroTeste@gmail.com", "12345678", UserRole.TECNICO_N3);
+        criarUsuarioSeNaoExiste("Admin", "Admin@gmail.com", "12345678", UserRole.ADMIN);
+        //criarUsuarioSeNaoExiste("Alvaro Admin", "AlvaroAdmin@gmail.com", "12345678", UserRole.ADMIN);
 
         criarEquipamentoSeNaoExiste("Desktop Dell OptiPlex 7010", "PAT-0001", "Recepção");
         criarEquipamentoSeNaoExiste("Desktop Positivo Master D270", "PAT-0002", "TI");

@@ -7,9 +7,16 @@ public record UsuarioResponseDTO(
         Long id,
         String nome,
         String email,
-        UserRole role
+        UserRole role,
+        boolean ativo
 ) {
     public UsuarioResponseDTO(UsuarioEntity entity) {
-        this(entity.getId(), entity.getNome(), entity.getEmail(), entity.getRole());
+        this(
+                entity.getId(),
+                entity.getNome(),
+                entity.getEmail(),
+                entity.getRole(),
+                entity.getAtivo() == null || entity.getAtivo()
+        );
     }
 }
