@@ -48,9 +48,6 @@ public class TicketService {
         return new TicketResponseDTO(entity);
     }
 
-    // clientId e nivel são filtros opcionais:
-    // - clientId: usado pelo SOLICITANTE para ver só os próprios chamados ("Meus Chamados")
-    // - nivel: usado pelo TÉCNICO para ver a fila de chamados do seu nível de atendimento
     public List<TicketResponseDTO> findAll(Long clientId, SupportLevel nivel) {
         List<TicketEntity> tickets;
 
@@ -89,7 +86,6 @@ public class TicketService {
         return new TicketResponseDTO(entity);
     }
 
-    // Regra de negócio principal: N1 -> N2 -> N3. Não é possível escalar além de N3.
     public TicketResponseDTO escalar(Long id, TicketEscalateDTO dto, String emailAutor) {
         TicketEntity entity = findEntityById(id);
         validarTecnicoPodeAgir(entity, emailAutor);
@@ -98,9 +94,8 @@ public class TicketService {
         SupportLevel proximoNivel = proximoNivel(nivelAnterior);
         entity.setCurrentLevel(proximoNivel);
         entity.setStatus(TicketStatus.ANDAMENTO);
-
-        // Volta a "sem responsável" no novo nível — alguém DESSE nível precisa assumir de novo.
         entity.setTechnician(null);
+
         if (dto.technicianId() != null) {
             UsuarioEntity tecnico = usuarioService.findEntityById(dto.technicianId());
             entity.setTechnician(tecnico);
@@ -118,17 +113,19 @@ public class TicketService {
         return new TicketResponseDTO(entity);
     }
 
-    // Assumir um chamado exige que o nível do técnico bata EXATAMENTE com o nível do chamado.
+    // Admin ignora a trava de nível e consegue assumir qualquer chamado
     public TicketResponseDTO pegar(Long id, String emailTecnico) {
         TicketEntity entity = findEntityById(id);
         UsuarioEntity tecnico = usuarioService.findEntityByEmail(emailTecnico);
 
-        SupportLevel nivelTecnico = nivelDoRole(tecnico.getRole());
-        if (nivelTecnico != entity.getCurrentLevel()) {
-            throw new IllegalStateException(
-                    "Este chamado está no nível " + entity.getCurrentLevel()
-                            + " e só pode ser assumido por um técnico desse mesmo nível."
-            );
+        if (!isAdmin(tecnico)) {
+            SupportLevel nivelTecnico = nivelDoRole(tecnico.getRole());
+            if (nivelTecnico != entity.getCurrentLevel()) {
+                throw new IllegalStateException(
+                        "Este chamado está no nível " + entity.getCurrentLevel()
+                                + " e só pode ser assumido por um técnico desse mesmo nível."
+                );
+            }
         }
 
         entity.setTechnician(tecnico);
@@ -157,10 +154,13 @@ public class TicketService {
         return new TicketResponseDTO(entity);
     }
 
-    // Bloqueia status/escalar/cancelar quando a pessoa NÃO é a responsável pelo chamado
-    // E também não é um técnico do MESMO nível do chamado (comparação exata, sem herança).
+    // Admin sempre pode agir, sem checagem de nível ou de posse
     private void validarTecnicoPodeAgir(TicketEntity entity, String emailAutor) {
         UsuarioEntity tecnico = usuarioService.findEntityByEmail(emailAutor);
+
+        if (isAdmin(tecnico)) {
+            return;
+        }
 
         boolean eOTecnicoResponsavel = entity.getTechnician() != null
                 && entity.getTechnician().getId().equals(tecnico.getId());
@@ -175,12 +175,17 @@ public class TicketService {
         }
     }
 
+    private boolean isAdmin(UsuarioEntity usuario) {
+        return usuario.getRole() == UserRole.ADMIN;
+    }
+
     private SupportLevel nivelDoRole(UserRole role) {
         return switch (role) {
             case TECNICO_N1 -> SupportLevel.N1;
             case TECNICO_N2 -> SupportLevel.N2;
             case TECNICO_N3 -> SupportLevel.N3;
             case SOLICITANTE -> null;
+            case ADMIN -> null;
         };
     }
 

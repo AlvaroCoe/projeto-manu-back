@@ -30,6 +30,11 @@ public class AuthService {
             throw new ResourceNotFoundException("E-mail ou senha inválidos");
         }
 
+        // getAtivo() != null evita quebrar contas antigas que ainda não tinham essa coluna
+        if (usuario.getAtivo() != null && !usuario.getAtivo()) {
+            throw new IllegalStateException("Esta conta foi desativada. Fale com um administrador.");
+        }
+
         String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRole().name());
 
         return new LoginResponseDTO(

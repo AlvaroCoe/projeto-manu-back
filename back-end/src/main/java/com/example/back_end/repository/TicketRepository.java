@@ -6,9 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface TicketRepository extends JpaRepository<TicketEntity, Long> {
-    // Busca chamados filtrando pelo nível de suporte (N1, N2, N3)
     List<TicketEntity> findByCurrentLevel(SupportLevel currentLevel);
-
-    // Busca chamados de um solicitante específico ("Meus Chamados")
     List<TicketEntity> findByClientId(Long clientId);
+
+    // Usados pra impedir excluir um funcionário que já tem histórico
+    boolean existsByClientId(Long clientId);
+    boolean existsByTechnicianId(Long technicianId);
 }

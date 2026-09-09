@@ -4,7 +4,8 @@ public enum UserRole {
     SOLICITANTE ("solicitante"),
     TECNICO_N1 ("n1"),
     TECNICO_N2 ("n2"),
-    TECNICO_N3 ("n3");
+    TECNICO_N3 ("n3"),
+    ADMIN ("admin");
 
     private final String texto;
 
