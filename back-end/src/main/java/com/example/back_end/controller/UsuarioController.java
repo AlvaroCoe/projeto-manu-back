@@ -1,5 +1,7 @@
 package com.example.back_end.controller;
 
+import com.example.back_end.dto.AlterarSenhaDTO;
+import com.example.back_end.dto.MensagemDTO;
 import com.example.back_end.dto.UsuarioCreateDTO;
 import com.example.back_end.dto.UsuarioResponseDTO;
 import com.example.back_end.dto.UsuarioStatusUpdateDTO;
@@ -9,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -20,6 +23,14 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    // Qualquer usuário autenticado (Solicitante, N1, N2, N3 ou Admin) pode trocar a própria senha.
+    // Sem @PreAuthorize de propósito: a única regra é estar logado (já garantido pelo SecurityConfig).
+    @PatchMapping("/me/senha")
+    public ResponseEntity<MensagemDTO> alterarMinhaSenha(@Valid @RequestBody AlterarSenhaDTO dto,
+                                                         Authentication authentication) {
+        return ResponseEntity.ok(usuarioService.alterarSenha(authentication.getName(), dto));
+    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping

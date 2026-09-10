@@ -1,5 +1,7 @@
 package com.example.back_end.service;
 
+import com.example.back_end.dto.AlterarSenhaDTO;
+import com.example.back_end.dto.MensagemDTO;
 import com.example.back_end.dto.UsuarioCreateDTO;
 import com.example.back_end.dto.UsuarioResponseDTO;
 import com.example.back_end.dto.UsuarioStatusUpdateDTO;
@@ -97,5 +99,24 @@ public class UsuarioService {
         }
 
         usuarioRepository.delete(entity);
+    }
+
+    // Troca de senha feita pelo próprio usuário logado (Solicitante, N1, N2, N3 ou Admin),
+    // diferente da redefinição via e-mail: aqui é obrigatório informar a senha atual.
+    public MensagemDTO alterarSenha(String email, AlterarSenhaDTO dto) {
+        UsuarioEntity usuario = findEntityByEmail(email);
+
+        if (!passwordEncoder.matches(dto.senhaAtual(), usuario.getSenha())) {
+            throw new IllegalStateException("A senha atual informada está incorreta.");
+        }
+
+        if (passwordEncoder.matches(dto.novaSenha(), usuario.getSenha())) {
+            throw new IllegalStateException("A nova senha deve ser diferente da senha atual.");
+        }
+
+        usuario.setSenha(passwordEncoder.encode(dto.novaSenha()));
+        usuarioRepository.save(usuario);
+
+        return new MensagemDTO("Senha alterada com sucesso.");
     }
 }
