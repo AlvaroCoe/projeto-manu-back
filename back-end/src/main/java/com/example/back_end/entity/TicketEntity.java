@@ -30,6 +30,10 @@ public class TicketEntity {
     private LocalDateTime createdAt;
     private LocalDateTime resolvedAt;
 
+    // Preenchido só quando a pessoa digita o equipamento em vez de escolher
+    // um já cadastrado — o "equipamento" abaixo fica null nesse caso.
+    private String equipamentoDescricaoLivre;
+
     @ManyToOne
     @JoinColumn(name = "client_id")
     private UsuarioEntity client;
@@ -65,6 +69,8 @@ public class TicketEntity {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getResolvedAt() { return resolvedAt; }
     public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
+    public String getEquipamentoDescricaoLivre() { return equipamentoDescricaoLivre; }
+    public void setEquipamentoDescricaoLivre(String equipamentoDescricaoLivre) { this.equipamentoDescricaoLivre = equipamentoDescricaoLivre; }
     public UsuarioEntity getClient() { return client; }
     public void setClient(UsuarioEntity client) { this.client = client; }
     public UsuarioEntity getTechnician() { return technician; }

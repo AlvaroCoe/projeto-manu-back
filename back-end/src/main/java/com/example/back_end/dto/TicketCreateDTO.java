@@ -20,7 +20,8 @@ public record TicketCreateDTO(
         @NotNull(message = "O solicitante (cliente) é obrigatório")
         Long clientId,
 
-        @NotNull(message = "O equipamento é obrigatório")
-        Long equipamentoId
+        // Um dos dois abaixo precisa vir preenchido (validado no service)
+        Long equipamentoId,
+        String equipamentoDescricaoLivre
 ) {
 }

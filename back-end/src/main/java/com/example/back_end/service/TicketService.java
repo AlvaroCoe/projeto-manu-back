@@ -34,7 +34,17 @@ public class TicketService {
 
     public TicketResponseDTO create(TicketCreateDTO dto) {
         UsuarioEntity client = usuarioService.findEntityById(dto.clientId());
-        EquipamentoEntity equipamento = equipamentoService.findEntityById(dto.equipamentoId());
+
+        EquipamentoEntity equipamento = null;
+        String descricaoLivre = null;
+
+        if (dto.equipamentoId() != null) {
+            equipamento = equipamentoService.findEntityById(dto.equipamentoId());
+        } else if (dto.equipamentoDescricaoLivre() != null && !dto.equipamentoDescricaoLivre().isBlank()) {
+            descricaoLivre = dto.equipamentoDescricaoLivre();
+        } else {
+            throw new IllegalStateException("Selecione um equipamento cadastrado ou descreva o equipamento.");
+        }
 
         TicketEntity entity = new TicketEntity();
         entity.setTitulo(dto.titulo());
@@ -43,6 +53,7 @@ public class TicketService {
         entity.setImageUrl(dto.imageUrl());
         entity.setClient(client);
         entity.setEquipamento(equipamento);
+        entity.setEquipamentoDescricaoLivre(descricaoLivre);
 
         entity = ticketRepository.save(entity);
         return new TicketResponseDTO(entity);
