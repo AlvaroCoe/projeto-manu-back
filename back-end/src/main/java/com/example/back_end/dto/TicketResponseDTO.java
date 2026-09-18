@@ -20,7 +20,8 @@ public record TicketResponseDTO(
         boolean atrasado,
         UsuarioResponseDTO client,
         UsuarioResponseDTO technician,
-        EquipamentoResponseDTO equipamento
+        EquipamentoResponseDTO equipamento,
+        String equipamentoDescricaoLivre
 ) {
     public TicketResponseDTO(TicketEntity entity) {
         this(
@@ -36,7 +37,8 @@ public record TicketResponseDTO(
                 calcularAtrasado(entity),
                 entity.getClient() != null ? new UsuarioResponseDTO(entity.getClient()) : null,
                 entity.getTechnician() != null ? new UsuarioResponseDTO(entity.getTechnician()) : null,
-                entity.getEquipamento() != null ? new EquipamentoResponseDTO(entity.getEquipamento()) : null
+                entity.getEquipamento() != null ? new EquipamentoResponseDTO(entity.getEquipamento()) : null,
+                entity.getEquipamentoDescricaoLivre()
         );
     }
 
@@ -44,10 +46,6 @@ public record TicketResponseDTO(
         return entity.getCreatedAt().plusHours(horasPorPrioridade(entity.getPrioridade()));
     }
 
-    // Enquanto o chamado está aberto, compara com "agora" (atraso em tempo real).
-    // Depois de resolvido (FINALIZADO ou CANCELADO), compara com o momento exato
-    // em que foi resolvido — assim um chamado que atrasou continua marcado como
-    // atrasado pra sempre, mesmo depois de fechado.
     private static boolean calcularAtrasado(TicketEntity entity) {
         LocalDateTime prazoLimite = calcularPrazoLimite(entity);
         LocalDateTime referencia = entity.getResolvedAt() != null ? entity.getResolvedAt() : LocalDateTime.now();
